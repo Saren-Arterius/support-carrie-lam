@@ -64,9 +64,6 @@ let spawnHelper = function (threads, /*options,*/ callback) {
           url: 'http://52.220.20.197/assets/i/carrielam/p1.png',
           headers: {
             'Host': 'carrielam.1km.hk'
-          },
-          formData: {
-            addForward: "1"
           }
         }, function (error, response, body) {
           /*
@@ -79,7 +76,7 @@ let spawnHelper = function (threads, /*options,*/ callback) {
           if (error) {
             console.log(error);
           } else {
-            count++;
+            count += body.length;
           }
           next();
         });
@@ -89,10 +86,13 @@ let spawnHelper = function (threads, /*options,*/ callback) {
   }
   printInterval = setInterval(function () {
     var seconds = (Date.now() - startTime) / 1000;
-    var speed = Math.round((count / seconds) * 100) / 100;
+    var mbs = count / 1024 / 1024;
+    var speed = mbs / seconds;
+    mbs = Math.round(mbs * 100) / 100;
+    speed = Math.round(speed * 100) / 100;
     seconds = Math.round(seconds);
-    console.log(`+ Vote count: ${count}`);
-    console.log(`+ Elapsed time: ${seconds}s, Avg Speed: ${speed} req/s`);
+    console.log(`+ Total RX: ${mbs}MB`);
+    console.log(`+ Elapsed time: ${seconds}s, Avg Speed: ${speed} MB/s`);
   }, 1000);
   callback([]);
 };
@@ -100,10 +100,13 @@ let spawnHelper = function (threads, /*options,*/ callback) {
 let stopHelper = function (callback) {
   clearInterval(printInterval);
   var seconds = (Date.now() - startTime) / 1000;
-  var speed = Math.round((count / seconds) * 100) / 100;
+  var mbs = count / 1024 / 1024;
+  var speed = mbs / seconds;
+  mbs = Math.round(mbs * 100) / 100;
+  speed = Math.round(speed * 100) / 100;
   seconds = Math.round(seconds);
-  console.log(`~~ Vote count in this session: ${count} ~~`);
-  console.log(`~~ Elapsed time: ${seconds}s, Avg Speed: ${speed} votes/s ~~`);
+  console.log(`~~ Total RX: ${mbs}MB ~~`);
+  console.log(`~~ Elapsed time: ${seconds}s, Avg Speed: ${speed} MB/s ~~`);
   stop = true;
   count = 0;
   startTime = null;
