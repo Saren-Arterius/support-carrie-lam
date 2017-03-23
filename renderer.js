@@ -9,7 +9,6 @@ let lock = false;
 let page = $('html, body');
 let stop = true;
 let count = 0;
-let total;
 
 let oldLog = console.log;
 console.log = function (message) {
@@ -61,8 +60,8 @@ let spawnHelper = function (threads, /*options,*/ callback) {
         if (stop) {
           return next(new Error('Stopped'));
         }
-        request.post({
-          url: 'http://52.220.20.197/index.php?m=carrielam&c=Index&a=addforward',
+        request.get({
+          url: 'http://52.220.20.197/assets/i/carrielam/p1.png',
           headers: {
             'Host': 'carrielam.1km.hk'
           },
@@ -80,13 +79,7 @@ let spawnHelper = function (threads, /*options,*/ callback) {
           if (error) {
             console.log(error);
           } else {
-            try {
-              total = JSON.parse(body.total_forward);
-              count++;
-            } catch (e) {
-              console.log(e);
-              console.log(body);
-            }
+            count++;
           }
           next();
         });
@@ -98,8 +91,8 @@ let spawnHelper = function (threads, /*options,*/ callback) {
     var seconds = (Date.now() - startTime) / 1000;
     var speed = Math.round((count / seconds) * 100) / 100;
     seconds = Math.round(seconds);
-    console.log(`+ Vote count: ${count}, Global total: ${total}`);
-    console.log(`+ Elapsed time: ${seconds}s, Avg Speed: ${speed} votes/s`);
+    console.log(`+ Vote count: ${count}`);
+    console.log(`+ Elapsed time: ${seconds}s, Avg Speed: ${speed} req/s`);
   }, 1000);
   callback([]);
 };
@@ -109,7 +102,7 @@ let stopHelper = function (callback) {
   var seconds = (Date.now() - startTime) / 1000;
   var speed = Math.round((count / seconds) * 100) / 100;
   seconds = Math.round(seconds);
-  console.log(`~~ Vote count in this session: ${count}, Global total: ${total} ~~`);
+  console.log(`~~ Vote count in this session: ${count} ~~`);
   console.log(`~~ Elapsed time: ${seconds}s, Avg Speed: ${speed} votes/s ~~`);
   stop = true;
   count = 0;
