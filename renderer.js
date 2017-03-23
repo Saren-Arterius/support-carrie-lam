@@ -41,9 +41,10 @@ let pollingInterval = setInterval(function () {
   clearInterval(pollingInterval);
 }, 200);
 
-let spawnHelper = function (threads, options, callback) {
+let spawnHelper = function (threads, /*options,*/ callback) {
   stop = false;
   startTime = Date.now();
+  /*
   var headers = {};
   var tmp = options.split('\'');
   for (var i in tmp) {
@@ -53,6 +54,7 @@ let spawnHelper = function (threads, options, callback) {
     }
   }
   console.log('Request headers: ' + JSON.stringify(headers));
+  */
   for (var i = 0; i < threads; i++) {
     Async.forever(
       function (next) {
@@ -60,12 +62,21 @@ let spawnHelper = function (threads, options, callback) {
           return next(new Error('Stopped'));
         }
         request.post({
-          url: 'http://carrielam.1km.hk/index.php?m=carrielam&c=Index&a=addforward',
-          headers: headers,
+          url: 'http://52.220.20.197/index.php?m=carrielam&c=Index&a=addforward',
+          headers: {
+            'Host': 'carrielam.1km.hk'
+          },
           formData: {
-            addForward: 1
+            addForward: "1"
           }
         }, function (error, response, body) {
+          /*
+          if (body && body.indexOf('Checking your browser before accessing') !== -1) {
+            console.log('!!! Please update cURL parameters !!!');
+            stopHelper(function () {});
+            return next(new Error('Stopped'));
+          }
+          */
           if (error) {
             console.log(error);
           } else {
@@ -73,6 +84,7 @@ let spawnHelper = function (threads, options, callback) {
               total = JSON.parse(body.total_forward);
               count++;
             } catch (e) {
+              console.log(e);
               console.log(body);
             }
           }
@@ -93,6 +105,7 @@ let spawnHelper = function (threads, options, callback) {
 };
 
 let stopHelper = function (callback) {
+  clearInterval(printInterval);
   var seconds = (Date.now() - startTime) / 1000;
   var speed = Math.round((count / seconds) * 100) / 100;
   seconds = Math.round(seconds);
@@ -101,7 +114,6 @@ let stopHelper = function (callback) {
   stop = true;
   count = 0;
   startTime = null;
-  clearInterval(printInterval);
   callback();
 };
 
@@ -133,9 +145,9 @@ let toggleCLSHelper = function () {
   }
   toggleLock(true);
   var threads = parseInt($('#thread-count').val()) || 1;
-  var options = $('#curl-request').val();
+  // var options = $('#curl-request').val();
   if (!currentHelper) {
-    spawnHelper(threads, options, function (client) {
+    spawnHelper(threads, /*options,*/ function (client) {
       currentHelper = client;
       toggleLock(false);
       updateUI();
