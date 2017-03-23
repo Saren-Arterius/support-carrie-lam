@@ -8,31 +8,31 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.6.0/styles/default.min.css">
     <link rel="stylesheet" href="style.css">
-    <title>WSTunnel Client</title>
+    <title>Support Carrie Lam</title>
   </head>
 
   <body>
     <div class="container">
       <div class="card-panel">
-        <h1 class="center-align header">WSTunnel Client</h1>
+        <h1 class="center-align header">Support Carrie Lam</h1>
         <!-- All of the Node.js APIs are available in this renderer process. -->
         <div class="row">
           <form id="main-form" class="col s12">
             <div class="row">
               <div class="input-field col s12">
-                <input id="remote-server" type="text" class="validate" placeholder="wss://neu.wtako.net/tunnel" required>
-                <label for="remote-server">Remote server</label>
+                <input id="curl-request" type="text" class="validate" placeholder="curl 'http://carrielam.1km.hk/' -H 'Pragma: no-cache' -H 'DNT: 1'..." required>
+                <label for="curl-request">Chrome 'Copy as cURL' result</label>
               </div>
             </div>
             <div class="row">
               <div class="input-field col s12">
-                <input id="local-port" type="number" class="validate" placeholder="1024-65535 (Default: 30000)" maxlength="5" min="1" max="65535" step="1">
-                <label for="local-port">Local port</label>
+                <input id="thread-count" type="number" class="validate" placeholder="Default: 1" min="1" step="1">
+                <label for="thread-count">Threads</label>
               </div>
             </div>
             <div class="row">
               <div class="input-field col s12">
-                <button id="toggle-btn" class="btn btn-large waves-effect waves-light" name="action" style="width: 100%;"><span id="button-text">Start</span>
+                <button id="toggle-btn" class="btn btn-large waves-effect waves-light" name="action" style="width: 100%;"><span id="button-text">Start helper</span>
                   <i class="material-icons right">power_settings_new</i>
                 </button>
               </div>

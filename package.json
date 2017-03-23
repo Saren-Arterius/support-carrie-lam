@@ -1,14 +1,14 @@
 {
-  "name": "wstunnel-client-electron",
+  "name": "support-carrie-lam",
   "version": "1.0.0",
-  "description": "Start mhzed/wstunnel client over Electron GUI",
+  "description": "Show your support to Carrie Lam!",
   "main": "main.js",
   "scripts": {
     "start": "electron ."
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Saren-Arterius/wstunnel-client-electron"
+    "url": "git+https://github.com/Saren-Arterius/support-carrie-lam"
   },
   "keywords": [
     "Electron",
@@ -19,13 +19,14 @@
   "author": "Saren",
   "license": "CC0-1.0",
   "bugs": {
-    "url": "https://github.com/Saren-Arterius/wstunnel-client-electron/issues"
+    "url": "https://github.com/Saren-Arterius/support-carrie-lam/issues"
   },
-  "homepage": "https://github.com/Saren-Arterius/wstunnel-client-electron#readme",
+  "homepage": "https://github.com/Saren-Arterius/support-carrie-lam#readme",
   "devDependencies": {
     "electron": "^1.3.4"
   },
   "dependencies": {
-    "wstunnel": "^1.1.1"
+    "async": "^2.1.5",
+    "request": "^2.81.0"
   }
 }

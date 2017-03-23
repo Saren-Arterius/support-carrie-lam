@@ -1,12 +1,15 @@
-const wst = require('wstunnel');
 const shell = require('electron').shell;
-const fs = require('fs');
+const Async = require('async');
+const request = require('request');
 
-const LAST_USING_FILE = 'last-using.json';
-
-let currentWSClient;
+let printInterval;
+let currentHelper;
+let startTime;
 let lock = false;
 let page = $('html, body');
+let stop = true;
+let count = 0;
+let total;
 
 let oldLog = console.log;
 console.log = function (message) {
@@ -25,6 +28,7 @@ $(document).on('click', 'a[href^="http"]', function (event) {
   event.preventDefault();
   shell.openExternal(this.href);
 });
+
 let pollingInterval = setInterval(function () {
   let a = $('#star-container iframe').contents().find('a');
   if (!a.length) {
@@ -37,40 +41,80 @@ let pollingInterval = setInterval(function () {
   clearInterval(pollingInterval);
 }, 200);
 
-let remoteServerAndLocalPort = function () {
-  let port = parseInt($('#local-port').val().trim(), 10);
-  if (!port) port = 30000;
-  return [$('#remote-server').val().trim(), port];
+let spawnHelper = function (threads, options, callback) {
+  stop = false;
+  startTime = Date.now();
+  var headers = {};
+  var tmp = options.split('\'');
+  for (var i in tmp) {
+    if (i >= 3 && i % 2 == 1) {
+      var kv = tmp[i].split(': ');
+      headers[kv[0].trim()] = kv[1].trim();
+    }
+  }
+  console.log('Request headers: ' + JSON.stringify(headers));
+  for (var i = 0; i < threads; i++) {
+    Async.forever(
+      function (next) {
+        if (stop) {
+          return next(new Error('Stopped'));
+        }
+        request.post({
+          url: 'http://carrielam.1km.hk/index.php?m=carrielam&c=Index&a=addforward',
+          headers: headers,
+          formData: {
+            addForward: 1
+          }
+        }, function (error, response, body) {
+          if (error) {
+            console.log(error);
+          } else {
+            try {
+              total = JSON.parse(body.total_forward);
+              count++;
+            } catch (e) {
+              console.log(body);
+            }
+          }
+          next();
+        });
+      },
+      function (err) {}
+    );
+  }
+  printInterval = setInterval(function () {
+    var seconds = (Date.now() - startTime) / 1000;
+    var speed = Math.round((count / seconds) * 100) / 100;
+    seconds = Math.round(seconds);
+    console.log(`+ Vote count: ${count}, Global total: ${total}`);
+    console.log(`+ Elapsed time: ${seconds}s, Avg Speed: ${speed} votes/s`);
+  }, 1000);
+  callback([]);
 };
 
-let spawnWSTunnel = function (callback) {
-  let rslp = remoteServerAndLocalPort();
-  require('machine-uuid')(function (machineId) {
-    require('wstunnel/lib/httpSetup').config('', false);
-    let client = new wst.client();
-    client.verbose();
-    callback(client.start(rslp[1], rslp[0], void 0, {
-      'x-wstclient': machineId
-    }));
-  });
-};
-
-let stopWSTunnel = function (callback) {
-  currentWSClient.close(callback);
+let stopHelper = function (callback) {
+  var seconds = (Date.now() - startTime) / 1000;
+  var speed = Math.round((count / seconds) * 100) / 100;
+  seconds = Math.round(seconds);
+  console.log(`~~ Vote count in this session: ${count}, Global total: ${total} ~~`);
+  console.log(`~~ Elapsed time: ${seconds}s, Avg Speed: ${speed} votes/s ~~`);
+  stop = true;
+  count = 0;
+  startTime = null;
+  clearInterval(printInterval);
+  callback();
 };
 
 let updateUI = function () {
-  if (currentWSClient) {
-    $('#remote-server').attr('disabled', true);
-    $('#local-port').attr('disabled', true);
-    $('#button-text').text('Stop');
+  if (currentHelper) {
+    $('#thread-count').attr('disabled', true);
+    $('#button-text').text('Stop helper');
     page.animate({
       scrollTop: $(document).height() - $(window).height()
     }, 1000, 'easeOutQuint');
   } else {
-    $('#remote-server').removeAttr('disabled');
-    $('#local-port').removeAttr('disabled');
-    $('#button-text').text('Start');
+    $('#thread-count').removeAttr('disabled');
+    $('#button-text').text('Start helper');
   }
 };
 
@@ -83,63 +127,38 @@ let toggleLock = function (l) {
   }
 };
 
-let toggleWSClient = function () {
+let toggleCLSHelper = function () {
   if (lock) {
     return;
   }
   toggleLock(true);
-  let rslp = remoteServerAndLocalPort();
-  if (!currentWSClient) {
-    fs.writeFile(LAST_USING_FILE, JSON.stringify({
-      remoteServer: rslp[0],
-      localPort: rslp[1],
-      autoStart: true
-    }), function () {});
-    spawnWSTunnel(function (client) {
-      currentWSClient = client;
+  var threads = parseInt($('#thread-count').val()) || 1;
+  var options = $('#curl-request').val();
+  if (!currentHelper) {
+    spawnHelper(threads, options, function (client) {
+      currentHelper = client;
       toggleLock(false);
       updateUI();
-      console.log(`==* WSTunnel client started: localhost:${rslp[1]} => ${rslp[0]} *==`);
+      console.log(`==* Helper started - threads: ${threads} *==`);
     });
   } else {
-    fs.writeFile(LAST_USING_FILE, JSON.stringify({
-      remoteServer: rslp[0],
-      localPort: rslp[1],
-      autoStart: false
-    }), function () {});
-    stopWSTunnel(function (error) {
+    stopHelper(function (error) {
       if (error) {
         console.log(error);
       }
-      currentWSClient = null;
+      currentHelper = null;
       toggleLock(false);
       updateUI();
-      console.log('==* WSTunnel client stopped *==');
+      console.log('==* Helper client stopped *==');
     });
   }
 };
 
 $('#main-form').submit(function (event) {
   event.preventDefault();
-  toggleWSClient();
+  toggleCLSHelper();
 });
 
 page.on('scroll mousedown wheel DOMMouseScroll mousewheel keyup touchmove', function () {
   page.stop();
-});
-
-$(function () {
-  fs.readFile(LAST_USING_FILE, function (err, data) {
-    if (err || !data) return;
-    try {
-      let json = JSON.parse(data);
-      $('#remote-server').val(json.remoteServer);
-      $('#local-port').val(json.localPort);
-      if (json.autoStart) {
-        toggleWSClient();
-      }
-    } catch (e) {
-      console.log(e);
-    }
-  });
 });
